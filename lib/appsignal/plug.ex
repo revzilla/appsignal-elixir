@@ -91,7 +91,8 @@ if Appsignal.plug? do
           "port" => port,
           "query_string" => query_string,
           "request_uri" => url(conn),
-          "peer" => peer(conn)
+          "peer" => peer(conn),
+          "cookies" => extract_cookies(conn)
         } |> Map.merge(extract_request_headers(conn))
       }
     end
@@ -126,6 +127,13 @@ if Appsignal.plug? do
         "path" => path,
         "request_id" => request_id
       }
+    end
+
+    defp extract_cookies(%Plug.Conn{req_cookies: req_cookies}) do
+      case req_cookies do
+        %Plug.Conn.Unfetched{} -> nil
+        cookies -> cookies
+      end
     end
 
     defp merge_action_and_controller(action, controller) when is_atom(controller) do

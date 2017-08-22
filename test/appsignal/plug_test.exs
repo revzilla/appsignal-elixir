@@ -310,7 +310,8 @@ defmodule Appsignal.PlugTest do
           "query_string" => "foo=bar",
           "peer" => "127.0.0.1:12345",
           "request_uri" => "http://www.example.com:80/foo/bar",
-          "req_headers.accept" => "text/html"
+          "req_headers.accept" => "text/html",
+          "cookies" => nil
         }
       }
     end
