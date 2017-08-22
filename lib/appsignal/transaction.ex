@@ -393,8 +393,20 @@ defmodule Appsignal.Transaction do
       transaction
       |> Transaction.set_sample_data(Appsignal.Plug.extract_sample_data(conn))
       |> Transaction.set_meta_data(Appsignal.Plug.extract_meta_data(conn))
+      |> set_session_data(conn)
+      |> set_logger_meta_data(Logger.metadata)
+    end
 
-      # Add session data
+    defp set_logger_meta_data(transaction, nil), do: transaction
+    defp set_logger_meta_data(transaction, data) do
+      map =
+        data
+        |> Enum.reject(fn {key, _v} -> key == :request_id end)
+        |> Enum.into(%{})
+      Transaction.set_sample_data(transaction, "tags", map)
+    end
+
+    defp set_session_data(transaction, conn) do
       if !config()[:skip_session_data] and conn.private[:plug_session_fetch] == :done do
         Transaction.set_sample_data(
           transaction, "session_data", conn.private[:plug_session]
