@@ -389,19 +389,31 @@ defmodule Appsignal.Transaction do
       conn = conn
       |> Plug.Conn.fetch_query_params
 
+      IO.inspect Logger.metadata
+
       # collect sample data
       transaction
       |> Transaction.set_sample_data(Appsignal.Plug.extract_sample_data(conn))
       |> Transaction.set_meta_data(Appsignal.Plug.extract_meta_data(conn))
+      |> set_req_cookies(conn)
+      |> set_session_data(conn)
+    end
+  end
 
-      # Add session data
-      if !config()[:skip_session_data] and conn.private[:plug_session_fetch] == :done do
-        Transaction.set_sample_data(
-          transaction, "session_data", conn.private[:plug_session]
-        )
-      else
-        transaction
-      end
+  defp set_req_cookies(transaction, conn) do
+    case conn[:req_cookies] do
+      %Plug.Conn.Unfetched{} -> transaction
+      cookies -> Transaction.set_sample_data(transaction, "cookie_data", cookies)
+    end
+  end
+
+  defp set_session_data(transaction, conn) do
+    if !config()[:skip_session_data] and conn.private[:plug_session_fetch] == :done do
+      Transaction.set_sample_data(
+        transaction, "session_data", conn.private[:plug_session]
+      )
+    else
+      transaction
     end
   end
 
